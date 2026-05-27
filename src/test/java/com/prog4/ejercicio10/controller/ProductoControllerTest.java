@@ -1,76 +1,59 @@
-// package com.prog4.ejercicio10.controller;
+package com.prog4.ejercicio10.controller;
 
-// import java.util.List;
+import java.util.List;
 
-// import org.junit.jupiter.api.Test;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.when;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-// import org.springframework.http.MediaType;
-// import org.springframework.test.web.servlet.MockMvc;
-// import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-// import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-// import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-// import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-// import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import com.prog4.ejercicio10.model.Producto;
+import com.prog4.ejercicio10.repositories.IProductoRepository;
 
-// import com.prog4.ejercicio10.model.Producto;
-// import com.prog4.ejercicio10.service.ProductoService;
+import tools.jackson.databind.ObjectMapper;
 
-// @WebMvcTest(ProductoController.class)
-// public class ProductoControllerTest {
+@WebMvcTest(ProductoController.class)
+class ProductoControllerTest {
 
-//     @Autowired
-//     private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-//     @MockBean
-//     private ProductoService service;
+    @MockitoBean
+    private IProductoRepository repository;
 
-//     @Test
-//     void obtenerProductos() throws Exception {
+    @Autowired
+    private ObjectMapper objectMapper;
 
-//         List<Producto> lista = List.of(
-//                 new Producto(1L, "Mouse", 1500.0));
+    @Test
+    void listarProductos() throws Exception {
+        Producto producto = new Producto();
+        producto.setNombre("Mouse");
 
-//         when(service.listar()).thenReturn(lista);
+        when(repository.findAll()).thenReturn(List.of(producto));
 
-//         mockMvc.perform(get("/productos"))
-//                 .andExpect(status().isOk())
-//                 .andExpect(jsonPath("$.length()").value(1))
-//                 .andExpect(jsonPath("$[0].nombre").value("Mouse"));
-//     }
+        mockMvc.perform(get("/productos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nombre").value("Mouse"));
+    }
 
-//     @Test
-//     void guardarProducto() throws Exception {
+    @Test
+    void guardarProducto() throws Exception {
+        Producto producto = new Producto();
+        producto.setNombre("Mouse");
 
-//         Producto producto = new Producto(1L, "Mouse", 1500.0);
+        when(repository.save(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(producto);
 
-//         when(service.guardar(any())).thenReturn(producto);
-
-//         mockMvc.perform(post("/productos")
-//                 .contentType(MediaType.APPLICATION_JSON)
-//                 .content("""
-//                         {
-//                           "nombre": "Mouse",
-//                           "precio": 1500
-//                         }
-//                         """))
-//                 .andExpect(status().isCreated())
-//                 .andExpect(jsonPath("$.nombre").value("Mouse"));
-//     }
-
-//     @Test
-//     void guardarProducto_precioNegativo() throws Exception {
-
-//         mockMvc.perform(post("/productos")
-//                 .contentType(MediaType.APPLICATION_JSON)
-//                 .content("""
-//                         {
-//                           "nombre": "Mouse",
-//                           "precio": -10
-//                         }
-//                         """))
-//                 .andExpect(status().isBadRequest());
-//     }
-// }
+        mockMvc.perform(post("/productos")
+                //.contentType("application/json")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(producto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nombre").value("Mouse"));
+    }
+}
